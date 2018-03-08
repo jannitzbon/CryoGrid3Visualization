@@ -1,21 +1,22 @@
 % Plotting script for temperature and water content fields
 % Author: Jan Nitzbon
 % 
-%function plot_output(dirname, runname, number_of_realizations)
+% function plot_output(dirname, runname, number_of_realizations)
 
-clear all
+%clear all
 close all
 
- dirname = '/home/jnitzbon/CryoGrid/github/GITHUB_CryoGrid3_infiltration_xice_mpi/runs/';
- runname = 'testrunMPI_POOL_xH1_xW1_xS1_infil1_xice1_rF1.000000_sF1.000000_realization';
- number_of_realizations = 2;
+ dirname = '../runs/';
+ runname = 'SPINUP-EXICE_197906-201406_stratSamExice_rf1_sf1_maxSnow0.40_snowDens=200_wt10.0_extFlux0.0000_fc0.30_exice0.50_natPor0.40';
+ year = 2010;
+ number_of_realizations = 1;
 % 
 
     %% load output data and settings from files of all workers
 
 
     dir = dirname;%'/home/jnitzbon/gls1/CryoGrid/CryoGrid3_infiltration_xice_mpi_DEV/';
-    %cm=load( [ './analysis/cm_blueautumn.mat' ] );
+    cm=load( [ './cm_blueautumn.mat' ] );
 
     infil=0;
     xice=0;
@@ -30,7 +31,7 @@ close all
         if number_of_realizations>1
             run = [ run num2str(i) ];
         end
-        outputfile = [dir run  '/' run '_output1979.mat'];
+        outputfile = [dir run  '/' run '_output' num2str(year) '.mat'];
         configfile = [dir run  '/' run '_settings.mat'];
 
         load(outputfile);
@@ -66,8 +67,8 @@ close all
     %lakeFloor = [ NaN(length(soilTop)-length(lakeFloor),1); lakeFloor ];
 
     % limits
-    minz = min(OUTS{1}.PARA.location.altitude - 1);
-    maxz = max(OUTS{1}.PARA.location.altitude + 0.5);
+    minz = min(OUTS{1}.PARA.location.altitude - 10);
+    maxz = max(OUTS{1}.PARA.location.altitude + 2);
 
     mint = min(ts);
     maxt = max(ts);
@@ -82,7 +83,7 @@ close all
         subplot(2,3,1)
         hold on
         for i=1:number_of_realizations
-            plot(ts, OUTS{i}.OUT.location.active_layer_depth_altitude(:)) ; %abs(OUTS{1}.OUT.ensemble.altitude(:,i)-
+            plot(ts, OUTS{1}.OUT.ensemble.active_layer_depth_altitude(:,i)) ; %abs(OUTS{1}.OUT.ensemble.altitude(:,i)-
         end
         datetick;
         title('Frost table [m asl]')
@@ -91,7 +92,7 @@ close all
         subplot(2,3,2)
         hold on
         for i=1:number_of_realizations
-            plot(ts, OUTS{i}.OUT.location.water_table_altitude(:));
+            plot(ts, OUTS{1}.OUT.ensemble.water_table(:,i));
         end
         datetick;
         title('Water table [m asl]')
@@ -100,7 +101,7 @@ close all
         subplot(2,3,3)
         hold on
         for i=1:number_of_realizations
-            plot(ts, OUTS{i}.OUT.location.surface_altitude(:));
+            plot(ts, OUTS{1}.OUT.ensemble.surface_altitude(:,i));
         end
         datetick;
         title('Surface altitude [m asl]')
@@ -109,7 +110,7 @@ close all
         subplot(2,3,4)
         hold on
         for i=1:number_of_realizations
-            plot(ts, nansum(OUTS{i}.OUT.lateral.heat_fluxes , 2));
+            plot(ts, nansum(OUTS{i}.OUT.ensemble.heat_fluxes , 2));
         end
         datetick;
         title('Heat fluxes [ W / m^2 ]')
@@ -118,7 +119,7 @@ close all
         subplot(2,3,5)
         hold on
         for i=1:number_of_realizations
-            plot(ts, nansum(OUTS{i}.OUT.lateral.water_fluxes .*1000 .* 3600 , 2));
+            plot(ts, nansum(OUTS{i}.OUT.ensemble.water_fluxes .*1000 .* 3600 , 2));
         end
         datetick;
         title('Water fluxes [mm/h]')
@@ -127,7 +128,7 @@ close all
         subplot(2,3,6)
         hold on
         for i=1:number_of_realizations
-            plot(ts, nansum(OUTS{i}.OUT.lateral.snow_fluxes .*1000 .* 3600 , 2) );
+            plot(ts, nansum(OUTS{i}.OUT.ensemble.snow_fluxes .*1000 .* 3600 , 2) );
         end
         datetick;
         title('Snow fluxes [mm/h]')
@@ -195,30 +196,30 @@ close all
     title(currentFigure.Children(end), runname);    
     
     
-    %% plot soil moisture and temperature of requested depth
-    
-    % request time series for a certain depths
-    requestedDepth =  0.3 ;
-    
-    % get the altitude of the uppermost soil cell (which indeed contains
-    % mineral or organic material, i.e. excluding a potential waterbody)
-    soil_surface_altitude = OUTS{1}.PARA.location.altitude + min( OUTS{1}.OUT.soil.topPosition, OUTS{1}.OUT.soil.lakeFloor );
-    
-    % the static altitude grid
-    altitude_grid = zs{1};
-    
-    % compute the index of the requested cell for each timestep
-    A = zeros( length(altitude_grid), length(soil_surface_altitude) );   % matrix to serach in
-    for j=1:size(A,2)   %loop over all timesteps       
-        A(:,j) = soil_surface_altitude(j)- altitude_grid;      % distance of each grid cell (first dim) to the surface for each timestep (second dim)
-    end   
-    [~, indexes] = min( abs( A - requestedDepth ) );    % determine index of closest cell to the requested depth
-    
-    % transform column-wise index to linear index of whole matrix
-    linindexes = sub2ind( [length(altitude_grid),length(ts)], indexes, [1:1:length(ts)] );
-
-    figure;
-    plot( ts, LWCs{i}(linindexes) );
-
-    figure;
-    plot( ts, Ts{i}(linindexes) );
+%     %% plot soil moisture and temperature of requested depth
+%     
+%     % request time series for a certain depths
+%     requestedDepth =  0.3 ;
+%     
+%     % get the altitude of the uppermost soil cell (which indeed contains
+%     % mineral or organic material, i.e. excluding a potential waterbody)
+%     soil_surface_altitude = OUTS{1}.PARA.location.altitude + min( OUTS{1}.OUT.soil.topPosition, OUTS{1}.OUT.soil.lakeFloor );
+%     
+%     % the static altitude grid
+%     altitude_grid = zs{1};
+%     
+%     % compute the index of the requested cell for each timestep
+%     A = zeros( length(altitude_grid), length(soil_surface_altitude) );   % matrix to serach in
+%     for j=1:size(A,2)   %loop over all timesteps       
+%         A(:,j) = soil_surface_altitude(j)- altitude_grid;      % distance of each grid cell (first dim) to the surface for each timestep (second dim)
+%     end   
+%     [~, indexes] = min( abs( A - requestedDepth ) );    % determine index of closest cell to the requested depth
+%     
+%     % transform column-wise index to linear index of whole matrix
+%     linindexes = sub2ind( [length(altitude_grid),length(ts)], indexes, [1:1:length(ts)] );
+% 
+%     figure;
+%     plot( ts, LWCs{i}(linindexes) );
+% 
+%     figure;
+%     plot( ts, Ts{i}(linindexes) );
