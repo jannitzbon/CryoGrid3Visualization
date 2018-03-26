@@ -14,7 +14,7 @@ function fig = plot_waterTable_vs_time( OUT , PARA )
     plot( ts, water_table, 'LineWidth', 2, 'DisplayName', 'water table' );% 'Color', [176 196 222]./255,
     plot( ts, soil_level, 'LineWidth', 2, 'DisplayName', 'soil level' );% 'Color', [210 180 140]./255, 
    
-    axis( [ ts(1) ts(end) -0.2 0.2 ] );
+    axis( [ ts(1) ts(end) -0.4 0.4 ] );
     %ax=gca;
     %ax.XTick = linspace(ts(1), ts(end), 13);
     datetick('x','mmm');     
